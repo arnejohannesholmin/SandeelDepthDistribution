@@ -1,0 +1,29 @@
+Package: SandeelDepthDistribution
+Version: 1.0.1
+Date: 2022-09-30
+Title: Fits mixture gamma/normal distribution to sandeel school vertical distribution
+  data.
+Authors@R: c(
+  person(given = "Arne Johannes", 
+    family = "Holmin", 
+    role = c("cre", "aut"), 
+    email = "arnejh@hi.no"), 
+  person(given = "Norwegian Institute of Marine Research", 
+    role = c("cph", "fnd")))
+Depends: R (>= 3.6)
+Description: This package fits a mixture probability distribution to sandeel school vertical
+  distribution data, where the sandeel are split into two behaviors, a resting
+  behavior close to the sea bed modeled by the gamma distribution, and a
+  feeding behavior higher in the water column modeled by the normal
+  distribution.
+URL: https://github.com/arnejohannesholmin/SandeelDepthDistribution
+BugReports: https://github.com/arnejohannesholmin/SandeelDepthDistribution/issues
+License: LGPL-3
+LazyData: true
+Encoding: UTF-8
+Imports: 
+    data.table (>= 1.12.6),
+    ggplot2 (>= 3.0.0)
+Suggests: 
+    ggpubr (>= 0.3.0)
+RoxygenNote: 7.1.2
