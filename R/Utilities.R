@@ -16,6 +16,18 @@ zeropad<-function(x, n = NULL){
 	}
 }
 
+##################################################
+#' Plot the mixture gamma/normal fit
+#' 
+#' @inheritParams estimateDepthDistribution
+#' @param dateVariable The variable defining the intervals.
+#' @param length The number of intervals.
+#' @param start,end Optional start and end points of the interval span.
+#' @param unit Set this to "days" if you need day intervals.
+#' @param truncate An optinal two element vector of trucation limits for the time variable. Values below the first element are grouped into one interval, and values above the second element are grouped into one interval.
+#' 
+#' @export
+#' 
 addIntervals <- function(x, variable, length = 1, start = NULL, end = NULL, unit = NULL, truncate = NULL) {
 	
 	# Generate day intervals:

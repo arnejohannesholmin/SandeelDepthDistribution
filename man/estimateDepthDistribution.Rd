@@ -19,7 +19,7 @@ estimateDepthDistribution(
 )
 }
 \arguments{
-\item{data}{A table og sandeel depth data.}
+\item{data}{A table of sandeel depth data.}
 
 \item{variable}{The vvariable of interest, i.e. the variable that is fitted to the model (e.g. "distanceToBottom").}
 

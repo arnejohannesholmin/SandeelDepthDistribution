@@ -15,20 +15,24 @@
 #' 
 #' @export
 #' 
-plotModelFit <- function(fit, variable, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval", arrange = FALSE, adds = NULL, crop = FALSE)  {
+plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval", arrange = FALSE, adds = NULL, crop = FALSE)  {
 	if(crop) {
 		fit$parTable <- cropParTable(fit$parTable, dateVariable = dateIntevalVariable, timeVariable = timeIntevalVariable)
 	}
 	
 	indices <- seq_len(nrow(fit$parTable))
-	plots <- lapply(
-		indices, 
+	plots <- mapply(
 		plotModelFitOne, 
-		fit = fit, 
-		variable = variable, 
-		showAllFits = showAllFits, 
-		dateIntevalVariable = dateIntevalVariable, 
-		timeIntevalVariable = timeIntevalVariable
+		indices, 
+		showFit = showFit, 
+		MoreArgs = list(
+			fit = fit, 
+			variable = variable, 
+			showAllFits = showAllFits, 
+			dateIntevalVariable = dateIntevalVariable, 
+			timeIntevalVariable = timeIntevalVariable
+		), 
+		SIMPLIFY = FALSE
 	)
 	
 	if(length(adds)) {
@@ -38,15 +42,15 @@ plotModelFit <- function(fit, variable, showAllFits = FALSE, dateIntevalVariable
 	if(arrange) {
 		plots <- ggpubr::ggarrange(
 			plotlist  = plots, 
-			nrow = length(unique(fit$parTable[[dateIntevalVariable]])), 
-			ncol = length(unique(fit$parTable[[timeIntevalVariable]]))
+			nrow = length(unique(fit$parTable[[timeIntevalVariable]])),
+			ncol = length(unique(fit$parTable[[dateIntevalVariable]]))
 		)
 	}
 	
 	return(plots)
 }
 
-plotModelFitOne <- function(ind, fit, variable, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval") {
+plotModelFitOne <- function(ind, fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval") {
 	
 	thisPar <- as.list(fit$parTable[ind, ])
 	thisParList <- fit$par[[ind]]$parList
@@ -54,6 +58,7 @@ plotModelFitOne <- function(ind, fit, variable, showAllFits = FALSE, dateInteval
 	
 	
 	main <- paste0(dateIntevalVariable, ": ", thisPar[[dateIntevalVariable]], "\n", timeIntevalVariable,":  ", thisPar[[timeIntevalVariable]])
+	main <- gsub("IntervalString", "", main)
 	
 	
 	if(!is.na(thisPar[[1]])) {
@@ -77,26 +82,27 @@ plotModelFitOne <- function(ind, fit, variable, showAllFits = FALSE, dateInteval
 			}		
 		}
 		
-		valuesToPrint <- c("shape", "rate", "mu", "sigma", "p", "N")
-		toPrint <- paste0(
-			valuesToPrint, 
-			" = ", 
-			round(unlist(thisPar[valuesToPrint]), 3), 
-			collapse = "\n"
-		)
-		
-		
-		ggplotObject <- addLine(
-			ggplotObject = ggplotObject, 
-			data = thisData, 
-			variable = variable, 
-			par = thisPar, 
-			plotNr = 1, 
-			size = 1
-		) + 
+		if(showFit) {
+			valuesToPrint <- c("shape", "rate", "mu", "sigma", "p", "N")
+			toPrint <- paste0(
+				valuesToPrint, 
+				" = ", 
+				round(unlist(thisPar[valuesToPrint]), 3), 
+				collapse = "\n"
+			)
+			
+			
+			ggplotObject <- addLine(
+				ggplotObject = ggplotObject, 
+				data = thisData, 
+				variable = variable, 
+				par = thisPar, 
+				plotNr = 1, 
+				size = 1
+			) + 
 			ggplot2::theme(legend.position = "none") + 
-			ggplot2::annotate("text",  x = Inf, y = Inf, label = toPrint, vjust = 1, hjust = 1, size = 3)
-		
+			ggplot2::annotate("text",  x = Inf, y = Inf, label = toPrint, vjust = 1, hjust = 1, size = 3)		
+		}
 	}
 	else {
 		ggplotObject <- ggplot2::ggplot() + ggplot2::theme_void() + ggplot2::ggtitle(main)

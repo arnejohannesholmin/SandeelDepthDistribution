@@ -7,6 +7,7 @@
 plotModelFit(
   fit,
   variable,
+  showFit = TRUE,
   showAllFits = FALSE,
   dateIntevalVariable = "DateInterval",
   timeIntevalVariable = "HourInterval",

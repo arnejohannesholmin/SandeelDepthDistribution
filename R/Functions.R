@@ -1,7 +1,7 @@
 ##################################################
 #' Plot the mixture gamma/normal fit
 #' 
-#' @param data A table og sandeel depth data.
+#' @param data A table of sandeel depth data.
 #' @param variable The vvariable of interest, i.e. the variable that is fitted to the model (e.g. "distanceToBottom").
 #' @param dateVariable The variable defining the date, defaulted to "Date".
 #' @param timeVariable The variable defining the (diurnal) time, defaulted to "Hour".
@@ -17,20 +17,20 @@
 #' @export
 #' 
 estimateDepthDistribution <- function(data, variable = "distanceToBottom", dateVariable = "Date", timeVariable = "Hour", dateIntervalLength = 10, timeIntervalLength = 2, timeTruncate = NULL, p0 = 0.5, lower = 0.01, upper = 0.99, minLength = 20) {
+	
 	dateIntervalVariable <- paste0(dateVariable, "Interval")
 	timeIntervalVariable = paste0(timeVariable, "Interval")
 	dateIntervalStringVariable <- paste0(dateVariable, "IntervalString")
 	timeIntervalStringVariable = paste0(timeVariable, "IntervalString")
 	
-	data <- data.table::copy(data)
-	
-	#data <- addDateAndTimeInterval(sandeel.dt, dateIntervalLength = dateIntervalLength, timeIntervalLength = timeIntervalLength, dateVariable = dateVariable, timeVariable = timeVariable)
-	
-	addIntervals(data, dateVariable, length = dateIntervalLength, unit = "days")
-	
-	addIntervals(data, timeVariable, length = timeIntervalLength, truncate = timeTruncate)
-	# expand to full grid of date and time interval:
-	data <- expandDateAndTimeIntervalGrid(data, dateIntervalVariable = dateIntervalVariable, timeIntervalVariable = timeIntervalVariable)
+	data <- addDateAndTimeIntervals(
+		data, 
+		dateVariable = dateVariable,
+		timeVariable = timeVariable,
+		dateIntervalLength = dateIntervalLength,
+		timeIntervalLength = timeIntervalLength,
+		timeTruncate = timeTruncate
+	) 
 	
 	
 	
@@ -61,6 +61,35 @@ estimateDepthDistribution <- function(data, variable = "distanceToBottom", dateV
 		parTable = parTable
 	)
 }
+
+
+
+addDateAndTimeIntervals <- function(data, dateVariable = "Date", timeVariable = "Hour", dateIntervalLength = 10, timeIntervalLength = 2, timeTruncate = NULL) {
+	
+	dateIntervalVariable <- paste0(dateVariable, "Interval")
+	timeIntervalVariable = paste0(timeVariable, "Interval")
+	
+	data <- data.table::copy(data)
+	
+	addIntervals(
+		data, 
+		variable = dateVariable, 
+		length = dateIntervalLength, 
+		unit = "days"
+	)
+	
+	addIntervals(
+		data, 
+		variable = timeVariable, 
+		length = timeIntervalLength, 
+		truncate = timeTruncate
+	)
+	
+	# expand to full grid of date and time interval:
+	data <- expandDateAndTimeIntervalGrid(data, dateIntervalVariable = dateIntervalVariable, timeIntervalVariable = timeIntervalVariable)
+	
+	return(data)
+} 
 
 estimateDepthDistributionIteratively <- function(data, variable, p0, minLength = 20, interval = c(0, 1), lower = 0.05, upper = 0.95) {
 	
@@ -212,8 +241,21 @@ readSandeelData <- function(filePath) {
 	setnames(sandeel.dt, "Date", "DateNumeric")
 	sandeel.dt[, Date := as.Date(DateTime)]
 	
-	
 	sandeel.dt[, Hour := as.POSIXlt(DateTime)$hour]
+	
+	# Calculate time during the day relative to sun rise (0) and sun set (1):
+	latlondate <- subset(sandeel.dt, select=c(Latitude, Longitude, Date))
+	colnames(latlondate) <- c("lat", "lon", "date")
+	sun.df <- suncalc::getSunlightTimes(data = latlondate, keep = c("sunrise", "sunset"))
+	
+	# Merge with the data:
+	sandeel.dt <- cbind(sandeel.dt, sun.df[, c("sunrise", "sunset")])
+	
+	
+	sandeel.dt[, hour_from_sunrise := as.numeric(difftime(DateTime, sunrise), units="hours")]
+	sandeel.dt[, sunset_sunrise := as.numeric(difftime(sunset, sunrise), units="hours")]
+	sandeel.dt[, relative_time := hour_from_sunrise / sunset_sunrise]
+	
 	
 	return(sandeel.dt)
 }
