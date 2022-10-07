@@ -33,8 +33,10 @@ estimateDepthDistribution <- function(data, variable = "distanceToBottom", dateV
 	) 
 	
 	
+	splitBy <- c(dateIntervalVariable, timeIntervalVariable)
 	
-	data_splitted <- split(data, by = c(dateIntervalVariable, timeIntervalVariable))
+	
+	data_splitted <- split(data, by = splitBy)
 	
 	par <- list()
 	
@@ -54,6 +56,8 @@ estimateDepthDistribution <- function(data, variable = "distanceToBottom", dateV
 	}
 	
 	parTable <- data.table::rbindlist(lapply(par, "[[", "par"), fill = TRUE)
+	
+	data.table::setorderv(parTable, splitBy)
 	
 	list(
 		par = par, 
@@ -210,8 +214,8 @@ expandDateAndTimeIntervalGrid <- function(x, dateIntervalVariable = "DateInterva
 	
 	x[, c(varToMergeBackInDate, varToMergeBackInTime) := NULL]
 	
-	x <- merge(x, toMergeBackInDate, by = "thisXVariable")
-	x <- merge(x, toMergeBackInTime, by = "thisYVariable")
+	x <- merge(x, toMergeBackInDate, by = "thisXVariable", sort = FALSE)
+	x <- merge(x, toMergeBackInTime, by = "thisYVariable", sort = FALSE)
 	x[, c("thisXVariable", "thisYVariable") := NULL]
 	
 	return(x)

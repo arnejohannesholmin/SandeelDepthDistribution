@@ -43,7 +43,7 @@ addIntervals <- function(x, variable, length = 1, start = NULL, end = NULL, unit
 	}
 	
 	totalLength <- diff(truncate)
-	steps <- ceiling(totalLength / length)
+	steps <- ceiling(totalLength / length - 1e-10)
 	
 	
 	intervalSeq <- seq(truncate[1], length.out = steps + 1, by = if(length(unit)) paste(length, unit) else length)

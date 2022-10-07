@@ -13,7 +13,8 @@ plotModelFit(
   timeIntevalVariable = "HourInterval",
   arrange = FALSE,
   adds = NULL,
-  crop = FALSE
+  crop = FALSE,
+  byrow = TRUE
 )
 }
 \arguments{

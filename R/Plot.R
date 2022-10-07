@@ -13,11 +13,18 @@
 #' @return
 #' A list of ggplots or an arranged ggplot if arrange = TRUE.
 #' 
+#' @import ggplot2
+#' 
 #' @export
 #' 
-plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval", arrange = FALSE, adds = NULL, crop = FALSE)  {
+plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval", arrange = FALSE, adds = NULL, crop = FALSE, byrow = TRUE)  {
 	if(crop) {
 		fit$parTable <- cropParTable(fit$parTable, dateVariable = dateIntevalVariable, timeVariable = timeIntevalVariable)
+	}
+	
+	if(byrow) {
+		orderBy <- c(timeIntevalVariable, dateIntevalVariable)
+		data.table::setorderv(fit$parTable, orderBy)
 	}
 	
 	indices <- seq_len(nrow(fit$parTable))
