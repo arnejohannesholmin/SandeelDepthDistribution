@@ -9,6 +9,10 @@
 #' @param arrange Logical: If TRUE, arrange the plots using ggpubr::ggarrange.
 #' @param adds Optional ggplot object to add to each plot.
 #' @param crop Logical: If TRUE, crop the plots of the date and time intervals with no valid fits.
+#' @param byrow Logical: Used when arrange = TRUE. If TRUE (the default) arrange the plots by  row first and then column.
+#' @param valuesToPrint A vector of strings naming the estimated parameters to print in the plot. Possible values are "N", "p", "shape", "rate", "scale", "mu" and "sigma".
+#' @param addMain Logical: If TRUE, add the automatically generated main title.
+#' @param xlim A vector of min and max of the limit of the x axis. NULL (the default) implies individual automatic xlim from 0 to the maximum for each plot, and NA implies 0 to the maximum across all plots.
 #'
 #' @return
 #' A list of ggplots or an arranged ggplot if arrange = TRUE.
@@ -17,7 +21,8 @@
 #' 
 #' @export
 #' 
-plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval", arrange = FALSE, adds = NULL, crop = FALSE, byrow = TRUE)  {
+plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval", arrange = FALSE, adds = NULL, crop = FALSE, byrow = TRUE, valuesToPrint = c("N", "p", "shape", "rate", "mu", "sigma"), addMain = TRUE, xlim = NULL)  {
+	
 	if(crop) {
 		fit$parTable <- cropParTable(fit$parTable, dateVariable = dateIntevalVariable, timeVariable = timeIntevalVariable)
 	}
@@ -25,6 +30,10 @@ plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dat
 	if(byrow) {
 		orderBy <- c(timeIntevalVariable, dateIntevalVariable)
 		data.table::setorderv(fit$parTable, orderBy)
+	}
+	
+	if(length(xlim) == 1 && is.na(xlim)) {
+		xlim <- c(0, max(fit$data[[variable]], na.rm   =  TRUE))
 	}
 	
 	indices <- seq_len(nrow(fit$parTable))
@@ -37,7 +46,10 @@ plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dat
 			variable = variable, 
 			showAllFits = showAllFits, 
 			dateIntevalVariable = dateIntevalVariable, 
-			timeIntevalVariable = timeIntevalVariable
+			timeIntevalVariable = timeIntevalVariable, 
+			valuesToPrint = valuesToPrint, 
+			addMain = addMain,
+			xlim = xlim
 		), 
 		SIMPLIFY = FALSE
 	)
@@ -57,7 +69,7 @@ plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dat
 	return(plots)
 }
 
-plotModelFitOne <- function(ind, fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval") {
+plotModelFitOne <- function(ind, fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval", valuesToPrint = c("N", "p", "shape", "rate", "mu", "sigma"), addMain = TRUE, xlim = NULL) {
 	
 	thisPar <- as.list(fit$parTable[ind, ])
 	thisParList <- fit$par[[ind]]$parList
@@ -70,9 +82,14 @@ plotModelFitOne <- function(ind, fit, variable, showFit = TRUE, showAllFits = FA
 	
 	if(!is.na(thisPar[[1]])) {
 		ggplotObject <- ggplot2::ggplot(data = thisData, ggplot2::aes_string(x = variable)) + 
-			ggplot2::geom_histogram(ggplot2::aes(y = ..density..), colour = "black", fill = "pink") + 
-			ggplot2::ggtitle(main) + 
-			ggplot2::xlim(0, NA)
+			ggplot2::geom_histogram(ggplot2::aes(y = ..density..), colour = "black", fill = "pink")
+		
+		if(length(xlim)) {
+			ggplotObject <- ggplotObject + ggplot2::xlim(xlim[1], xlim[2])
+		}
+		else {
+			ggplotObject <- ggplotObject + ggplot2::xlim(0, NA)
+		}
 		
 		
 		if(showAllFits) {
@@ -90,13 +107,18 @@ plotModelFitOne <- function(ind, fit, variable, showFit = TRUE, showAllFits = FA
 		}
 		
 		if(showFit) {
-			valuesToPrint <- c("shape", "rate", "mu", "sigma", "p", "N")
-			toPrint <- paste0(
-				valuesToPrint, 
-				" = ", 
-				round(unlist(thisPar[valuesToPrint]), 3), 
-				collapse = "\n"
-			)
+			if(length(valuesToPrint)) {
+				toPrint <- paste0(
+					valuesToPrint, 
+					" = ", 
+					round(unlist(thisPar[valuesToPrint]), 3), 
+					collapse = "\n"
+				)
+			}
+			else {
+				toPrint <- NULL
+			}
+			
 			
 			
 			ggplotObject <- addLine(
@@ -107,13 +129,21 @@ plotModelFitOne <- function(ind, fit, variable, showFit = TRUE, showAllFits = FA
 				plotNr = 1, 
 				size = 1
 			) + 
-			ggplot2::theme(legend.position = "none") + 
-			ggplot2::annotate("text",  x = Inf, y = Inf, label = toPrint, vjust = 1, hjust = 1, size = 3)		
+			ggplot2::theme(legend.position = "none")
+				
+			if(length(toPrint)) {
+				ggplotObject <- ggplotObject + ggplot2::annotate("text",  x = Inf, y = Inf, label = toPrint, vjust = 1, hjust = 1, size = 3)
+			}
+					
 		}
 	}
 	else {
-		ggplotObject <- ggplot2::ggplot() + ggplot2::theme_void() + ggplot2::ggtitle(main)
+		ggplotObject <- ggplot2::ggplot() + ggplot2::theme_void()
 	}	
+	
+	if(addMain) {
+		ggplotObject <- ggplotObject + ggplot2::ggtitle(main)
+	}
 	
 	return(ggplotObject)	
 }

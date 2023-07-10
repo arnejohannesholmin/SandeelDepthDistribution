@@ -14,7 +14,10 @@ plotModelFit(
   arrange = FALSE,
   adds = NULL,
   crop = FALSE,
-  byrow = TRUE
+  byrow = TRUE,
+  valuesToPrint = c("N", "p", "shape", "rate", "mu", "sigma"),
+  addMain = TRUE,
+  xlim = NULL
 )
 }
 \arguments{
@@ -33,6 +36,14 @@ plotModelFit(
 \item{adds}{Optional ggplot object to add to each plot.}
 
 \item{crop}{Logical: If TRUE, crop the plots of the date and time intervals with no valid fits.}
+
+\item{byrow}{Logical: Used when arrange = TRUE. If TRUE (the default) arrange the plots by  row first and then column.}
+
+\item{valuesToPrint}{A vector of strings naming the estimated parameters to print in the plot. Possible values are "N", "p", "shape", "rate", "scale", "mu" and "sigma".}
+
+\item{addMain}{Logical: If TRUE, add the automatically generated main title.}
+
+\item{xlim}{A vector of min and max of the limit of the x axis. NULL (the default) implies individual automatic xlim from 0 to the maximum for each plot, and NA implies 0 to the maximum across all plots.}
 }
 \value{
 A list of ggplots or an arranged ggplot if arrange = TRUE.

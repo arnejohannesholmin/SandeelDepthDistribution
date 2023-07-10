@@ -188,9 +188,12 @@ estimateGammaAndNormalGivenP <- function(data, variable, p) {
 	out <- list(
 		shape = par[1], 
 		rate = par[2], 
+		scale = 1 / par[2], # Add the scale and not only the rate
 		mu = mu, 
 		sigma = sigma
 	)
+	
+	return(out)
 }
 
 expandDateAndTimeIntervalGrid <- function(x, dateIntervalVariable = "DateInterval", timeIntervalVariable = "HourInterval") {
