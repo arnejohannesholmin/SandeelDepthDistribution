@@ -12,6 +12,7 @@ estimateDepthDistribution(
   dateIntervalLength = 10,
   timeIntervalLength = 2,
   timeTruncate = NULL,
+  dateTruncate = NULL,
   p0 = 0.5,
   lower = 0.01,
   upper = 0.99,

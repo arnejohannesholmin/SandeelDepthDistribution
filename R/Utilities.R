@@ -30,23 +30,44 @@ zeropad<-function(x, n = NULL){
 #' 
 addIntervals <- function(x, variable, length = 1, start = NULL, end = NULL, unit = NULL, truncate = NULL) {
 	
+	minx <- x[, min(get(variable))]
+	maxx <- x[, max(get(variable))]
+	
 	# Generate day intervals:
 	if(!length(start)) {
-		start <- x[, min(get(variable))]
+		start <- minx
 	}
 	if(!length(end)) {
-		end <- x[, max(get(variable))]
+		end <- maxx
 	}
 	
 	if(!length(truncate)) {
 		truncate <- c(start, end)
 	}
 	
+	if(truncate[1] < minx) {
+		truncate[1] <- minx	
+	}
+	if(truncate[2] > maxx) {
+		truncate[2] <- maxx	
+	}
+	
+	
 	totalLength <- diff(truncate)
-	steps <- ceiling(totalLength / length - 1e-10)
+	steps <- totalLength / length - 1e-10
+	stepsCeiling <- ceiling(steps)
+	if(!all(steps == stepsCeiling)) {
+		warning("The length results in unequal intervals for the vvariable ", variable, ".")
+	}
+	#steps <- ceiling(totalLength / length - 1e-10)
 	
 	
-	intervalSeq <- seq(truncate[1], length.out = steps + 1, by = if(length(unit)) paste(length, unit) else length)
+	intervalSeq <- seq(truncate[1], length.out = stepsCeiling, by = if(length(unit)) paste(length, unit) else length)
+	if(truncate[2] > utils::tail(intervalSeq, 1)) {
+		intervalSeq <- c(intervalSeq, truncate[2])
+	}
+	
+	
 	
 	if(start < utils::head(intervalSeq, 1)) {
 		intervalSeq <- c(start, intervalSeq)

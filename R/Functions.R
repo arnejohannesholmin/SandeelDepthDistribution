@@ -16,7 +16,7 @@
 #'
 #' @export
 #' 
-estimateDepthDistribution <- function(data, variable = "distanceToBottom", dateVariable = "Date", timeVariable = "Hour", dateIntervalLength = 10, timeIntervalLength = 2, timeTruncate = NULL, p0 = 0.5, lower = 0.01, upper = 0.99, minLength = 20) {
+estimateDepthDistribution <- function(data, variable = "distanceToBottom", dateVariable = "Date", timeVariable = "Hour", dateIntervalLength = 10, timeIntervalLength = 2, timeTruncate = NULL, dateTruncate = NULL, p0 = 0.5, lower = 0.01, upper = 0.99, minLength = 20) {
 	
 	dateIntervalVariable <- paste0(dateVariable, "Interval")
 	timeIntervalVariable = paste0(timeVariable, "Interval")
@@ -29,7 +29,8 @@ estimateDepthDistribution <- function(data, variable = "distanceToBottom", dateV
 		timeVariable = timeVariable,
 		dateIntervalLength = dateIntervalLength,
 		timeIntervalLength = timeIntervalLength,
-		timeTruncate = timeTruncate
+		timeTruncate = timeTruncate, 
+		dateTruncate = dateTruncate
 	) 
 	
 	
@@ -59,6 +60,10 @@ estimateDepthDistribution <- function(data, variable = "distanceToBottom", dateV
 	
 	data.table::setorderv(parTable, splitBy)
 	
+	# Reconstruct the data from the data_splitted which contains the behavioralMode:
+	data <- data.table::rbindlist(data_splitted, idcol = FALSE, fill = TRUE)
+	data <- subset(data, !is.na(id))
+	
 	list(
 		par = par, 
 		data = data, 
@@ -68,7 +73,7 @@ estimateDepthDistribution <- function(data, variable = "distanceToBottom", dateV
 
 
 
-addDateAndTimeIntervals <- function(data, dateVariable = "Date", timeVariable = "Hour", dateIntervalLength = 10, timeIntervalLength = 2, timeTruncate = NULL) {
+addDateAndTimeIntervals <- function(data, dateVariable = "Date", timeVariable = "Hour", dateIntervalLength = 10, timeIntervalLength = 2, timeTruncate = NULL, dateTruncate = NULL) {
 	
 	dateIntervalVariable <- paste0(dateVariable, "Interval")
 	timeIntervalVariable = paste0(timeVariable, "Interval")
@@ -79,6 +84,7 @@ addDateAndTimeIntervals <- function(data, dateVariable = "Date", timeVariable = 
 		data, 
 		variable = dateVariable, 
 		length = dateIntervalLength, 
+		truncate = dateTruncate, 
 		unit = "days"
 	)
 	
@@ -127,6 +133,8 @@ estimateDepthDistributionIteratively <- function(data, variable, p0, minLength =
 	else {
 		
 		emptyPar <- structure(as.list(rep(NA_real_, 7)), names = c("shape", "rate", "mu", "sigma", "p", "N", "MaxLogLikelihood"))
+		# Insert the number of rows of the data:
+		emptyPar$N <- nrow(data)
 		
 		out <- list(
 			par = emptyPar, 
@@ -171,15 +179,20 @@ estimateDepthDistributionOne <- function(data, variable, p0, interval = c(0, 1),
 estimateGammaAndNormalGivenP <- function(data, variable, p) {
 	
 	# First divide into feeding and resting:
-	x <- data[[variable]]
-	numberOfResting <- ceiling(length(x) * (1 - p))
-	orderInd <- order(x)
-	xresting <- x[orderInd[seq_len(numberOfResting)]]	
-	xfeeding <- x[orderInd[seq(numberOfResting + 1, length(x))]]
+	#x <- data[[variable]]
+	#numberOfResting <- ceiling(length(x) * (1 - p))
+	#orderInd <- order(x)
+	#xresting <- x[orderInd[seq_len(numberOfResting)]]	
+	#xfeeding <- x[orderInd[seq(numberOfResting + 1, length(x))]]
+	
+	addBehavioralMode(data, orderVariable = variable, p = p)
+	xresting <- subset(data, behavioralMode == "resting")[[variable]]
+	xfeeding <- subset(data, behavioralMode == "feeding")[[variable]]
+	
 	
 	# Fit the Gamma distribution to the resting data:
-	par = MASS::fitdistr(xresting/mean(xresting), densfun = dgamma, list(shape = 1, rate = 1))$est
-	par[2] = par[2]/mean(xresting)
+	par = MASS::fitdistr(xresting / mean(xresting), densfun = dgamma, list(shape = 1, rate = 1))$est
+	par[2] = par[2] / mean(xresting)
 	
 	# Fit the normal distribution to the feeding data:
 	mu = mean(xfeeding, na.rm = TRUE)
@@ -195,6 +208,17 @@ estimateGammaAndNormalGivenP <- function(data, variable, p) {
 	
 	return(out)
 }
+
+
+addBehavioralMode <- function(data, orderVariable, p) {
+	x <- data[[orderVariable]]
+	numberOfResting <- ceiling(length(x) * (1 - p))
+	orderInd <- order(x)
+	# Insert the behavioralMode, "resting" for the smaller values of the orderVariable and "feeding" for the larger:
+	data[orderInd[seq_len(numberOfResting)], behavioralMode := "resting"]
+	data[orderInd[seq(numberOfResting + 1, length(x))], behavioralMode := "feeding"]
+}
+
 
 expandDateAndTimeIntervalGrid <- function(x, dateIntervalVariable = "DateInterval", timeIntervalVariable = "HourInterval") {
 	

@@ -76,11 +76,13 @@ plotModelFitOne <- function(ind, fit, variable, showFit = TRUE, showAllFits = FA
 	thisData <- subset(fit$data, get(dateIntevalVariable) == thisPar[[dateIntevalVariable]] & get(timeIntevalVariable) == thisPar[[timeIntevalVariable]])
 	
 	
+	
 	main <- paste0(dateIntevalVariable, ": ", thisPar[[dateIntevalVariable]], "\n", timeIntevalVariable,":  ", thisPar[[timeIntevalVariable]])
 	main <- gsub("IntervalString", "", main)
 	
 	
-	if(!is.na(thisPar[[1]])) {
+	if(NROW(thisData)) {
+		# Plot the histogram:
 		ggplotObject <- ggplot2::ggplot(data = thisData, ggplot2::aes_string(x = variable)) + 
 			ggplot2::geom_histogram(ggplot2::aes(y = ..density..), colour = "black", fill = "pink")
 		
@@ -92,54 +94,61 @@ plotModelFitOne <- function(ind, fit, variable, showFit = TRUE, showAllFits = FA
 		}
 		
 		
-		if(showAllFits) {
-			for(ind2 in seq_along(thisParList)) {
+		# Get the parameter values to print in the plot:
+		if(length(valuesToPrint)) {
+			toPrint <- paste0(
+				valuesToPrint, 
+				" = ", 
+				round(unlist(thisPar[valuesToPrint]), 3), 
+				collapse = "\n"
+			)
+		}
+		else {
+			toPrint <- NULL
+		}
+		
+		if(length(toPrint)) {
+			ggplotObject <- ggplotObject + ggplot2::annotate("text",  x = Inf, y = Inf, label = toPrint, vjust = 1, hjust = 1, size = 3)
+		}
+		
+		
+		if(!is.na(thisPar[[1]])) {
+			
+			if(showAllFits) {
+				for(ind2 in seq_along(thisParList)) {
+					
+					thisPar2 <- thisParList[[ind2]]
+					ggplotObject <- addLine(
+						ggplotObject = ggplotObject, 
+						data = thisData, 
+						variable = variable, 
+						par = thisPar2, 
+						plotNr = ind2
+					)
+				}		
+			}
+			
+			if(showFit) {
 				
-				thisPar2 <- thisParList[[ind2]]
 				ggplotObject <- addLine(
 					ggplotObject = ggplotObject, 
 					data = thisData, 
 					variable = variable, 
-					par = thisPar2, 
-					plotNr = ind2
-				)
-			}		
+					par = thisPar, 
+					plotNr = 1, 
+					size = 1
+				) + 
+					ggplot2::theme(legend.position = "none")
+				
+			}
 		}
 		
-		if(showFit) {
-			if(length(valuesToPrint)) {
-				toPrint <- paste0(
-					valuesToPrint, 
-					" = ", 
-					round(unlist(thisPar[valuesToPrint]), 3), 
-					collapse = "\n"
-				)
-			}
-			else {
-				toPrint <- NULL
-			}
-			
-			
-			
-			ggplotObject <- addLine(
-				ggplotObject = ggplotObject, 
-				data = thisData, 
-				variable = variable, 
-				par = thisPar, 
-				plotNr = 1, 
-				size = 1
-			) + 
-			ggplot2::theme(legend.position = "none")
-				
-			if(length(toPrint)) {
-				ggplotObject <- ggplotObject + ggplot2::annotate("text",  x = Inf, y = Inf, label = toPrint, vjust = 1, hjust = 1, size = 3)
-			}
-					
-		}
 	}
 	else {
 		ggplotObject <- ggplot2::ggplot() + ggplot2::theme_void()
-	}	
+	}
+	
+	
 	
 	if(addMain) {
 		ggplotObject <- ggplotObject + ggplot2::ggtitle(main)
