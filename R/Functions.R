@@ -211,6 +211,7 @@ estimateGammaAndNormalGivenP <- function(data, variable, p) {
 
 
 addBehavioralMode <- function(data, orderVariable, p) {
+	#browser()
 	x <- data[[orderVariable]]
 	numberOfResting <- ceiling(length(x) * (1 - p))
 	orderInd <- order(x)
@@ -262,10 +263,9 @@ readSandeelData <- function(filePath) {
 	d <- load(filePath)
 	sandeel.dt <- data.table::setDT(sandeel.dt)
 	
-	# Add BottomDepth and distance from the bottom i meters:
-	sandeel.dt[, BottomDepth := weighted_meanDepth / nor_Depth]
-	sandeel.dt[, distanceToBottom_weighted := BottomDepth - weighted_meanDepth]
-	sandeel.dt[, distanceToBottom := BottomDepth - meanDepth]
+	# Add distance from the bottom i meters:
+	sandeel.dt[, distanceToBottom_weighted := bottom_Depth - weighted_meanDepth]
+	sandeel.dt[, distanceToBottom := bottom_Depth - meanDepth]
 	
 	# Convert to proper Date and Time:
 	sandeel.dt[, DateTime := as.POSIXct(YMD_time, tz = "UTC")]

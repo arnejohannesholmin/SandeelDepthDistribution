@@ -17,7 +17,13 @@ plotModelFit(
   byrow = TRUE,
   valuesToPrint = c("N", "p", "shape", "rate", "mu", "sigma"),
   addMain = TRUE,
-  xlim = NULL
+  distToBottomLim = NULL,
+  densityLim = NULL,
+  flip = FALSE,
+  transpose = FALSE,
+  size = list(main = 3, info = 3, line = 1, axis.text = 10, axis.title = 14),
+  axis.text.angle = list(x = 0, y = 0),
+  ...
 )
 }
 \arguments{
@@ -43,7 +49,9 @@ plotModelFit(
 
 \item{addMain}{Logical: If TRUE, add the automatically generated main title.}
 
-\item{xlim}{A vector of min and max of the limit of the x axis. NULL (the default) implies individual automatic xlim from 0 to the maximum for each plot, and NA implies 0 to the maximum across all plots.}
+\item{distToBottomLim}{A vector of min and max of the limit of the disance to the bottom NULL (the default) implies individual automatic limits from 0 to the maximum distance for each plot, and NA implies 0 to the maximum across all plots.}
+
+\item{flip}{Logical: If TRUE, flip the axes so that distance to bottom is on the x axis.}
 }
 \value{
 A list of ggplots or an arranged ggplot if arrange = TRUE.
