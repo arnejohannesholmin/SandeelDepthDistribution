@@ -1,6 +1,6 @@
 Package: SandeelDepthDistribution
 Version: 0.0.3
-Date: 2023-09-19
+Date: 2023-10-16
 Title: Fits mixture gamma/normal distribution to sandeel school vertical distribution
   data.
 Authors@R: c(

@@ -22,7 +22,7 @@
 #' 
 #' @export
 #' 
-plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval", arrange = FALSE, adds = NULL, crop = FALSE, byrow = TRUE, valuesToPrint = c("N", "p", "shape", "rate", "mu", "sigma"), addMain = TRUE, distToBottomLim = NULL, densityLim = NULL, flip = FALSE, transpose = FALSE, size = list(main = 3, info = 3, line = 1, axis.text = 10, axis.title = 14), axis.text.angle = list(x = 0, y = 0), ...)  {
+plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval", arrange = FALSE, adds = NULL, crop = FALSE, byrow = TRUE, valuesToPrint = c("N", "p", "shape", "rate", "mu", "sigma"), addMain = TRUE, distToBottomLim = NULL, densityLim = NULL, flip = FALSE, transpose = FALSE, size = list(main = 3, info = 3, line = 1, axis.text = 10, axis.title = 14), axis.text.angle = list(x = 0, y = 0), binwidth = NULL, ...)  {
 	
 	# Apply sizes specified by the user:
 	defaultSize <- formals()$size
@@ -67,7 +67,8 @@ plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dat
 			densityLim = densityLim, 
 			flip = flip, 
 			size = size, 
-			axis.text.angle = axis.text.angle
+			axis.text.angle = axis.text.angle, 
+			binwidth = binwidth
 		), 
 		SIMPLIFY = FALSE
 	)
@@ -140,7 +141,7 @@ plotModelFit <- function(fit, variable, showFit = TRUE, showAllFits = FALSE, dat
 
 
 
-plotModelFitOne <- function(ind, fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval", valuesToPrint = c("N", "p", "shape", "rate", "mu", "sigma"), addMain = TRUE, distToBottomLim = NULL, densityLim = NULL, flip = FALSE, size = list(main = 3, info = 3, line = 1, axis.text = 10, axis.title = 14), axis.text.angle = list(x = 0, y = 0)) {
+plotModelFitOne <- function(ind, fit, variable, showFit = TRUE, showAllFits = FALSE, dateIntevalVariable = "DateInterval", timeIntevalVariable = "HourInterval", valuesToPrint = c("N", "p", "shape", "rate", "mu", "sigma"), addMain = TRUE, distToBottomLim = NULL, densityLim = NULL, flip = FALSE, size = list(main = 3, info = 3, line = 1, axis.text = 10, axis.title = 14), axis.text.angle = list(x = 0, y = 0), binwidth = NULL) {
 	
 	
 	
@@ -157,7 +158,7 @@ plotModelFitOne <- function(ind, fit, variable, showFit = TRUE, showAllFits = FA
 	if(NROW(thisData)) {
 		# Plot the histogram:
 		ggplotObject <- ggplot2::ggplot(data = thisData, ggplot2::aes_string(x = variable)) + 
-			ggplot2::geom_histogram(ggplot2::aes(y = ggplot2::after_stat(density)), colour = "black", fill = "pink")
+			ggplot2::geom_histogram(ggplot2::aes(y = ggplot2::after_stat(density)), colour = "black", fill = "pink", binwidth = binwidth)
 		
 		if(length(distToBottomLim)) {
 			ggplotObject <- ggplotObject + ggplot2::xlim(distToBottomLim[1], distToBottomLim[2])

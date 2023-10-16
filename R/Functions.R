@@ -189,7 +189,6 @@ estimateGammaAndNormalGivenP <- function(data, variable, p) {
 	xresting <- subset(data, behavioralMode == "resting")[[variable]]
 	xfeeding <- subset(data, behavioralMode == "feeding")[[variable]]
 	
-	
 	# Fit the Gamma distribution to the resting data:
 	par = MASS::fitdistr(xresting / mean(xresting), densfun = dgamma, list(shape = 1, rate = 1))$est
 	par[2] = par[2] / mean(xresting)
@@ -257,38 +256,41 @@ expandDateAndTimeIntervalGrid <- function(x, dateIntervalVariable = "DateInterva
 #'
 #' @export
 #' 
-readSandeelData <- function(filePath) {
+readSandeelData <- function(filePath, data = NULL) {
 	
 	# Read the sandeel data to a data.table:
-	d <- load(filePath)
-	sandeel.dt <- data.table::setDT(sandeel.dt)
+	if(!missing(filePath)) {
+		d <- load(filePath)
+		data <- get(d)
+	}
+	data <- data.table::setDT(data)
 	
 	# Add distance from the bottom i meters:
-	sandeel.dt[, distanceToBottom_weighted := bottom_Depth - weighted_meanDepth]
-	sandeel.dt[, distanceToBottom := bottom_Depth - meanDepth]
+	data[, distanceToBottom_weighted := bottom_Depth - weighted_meanDepth]
+	data[, distanceToBottom := bottom_Depth - meanDepth]
 	
 	# Convert to proper Date and Time:
-	sandeel.dt[, DateTime := as.POSIXct(YMD_time, tz = "UTC")]
-	setnames(sandeel.dt, "Date", "DateNumeric")
-	sandeel.dt[, Date := as.Date(DateTime)]
+	data[, DateTime := as.POSIXct(YMD_time, tz = "UTC")]
+	setnames(data, "Date", "DateNumeric")
+	data[, Date := as.Date(DateTime)]
 	
-	sandeel.dt[, Hour := as.POSIXlt(DateTime)$hour]
+	data[, Hour := as.POSIXlt(DateTime)$hour]
 	
 	# Calculate time during the day relative to sun rise (0) and sun set (1):
-	latlondate <- subset(sandeel.dt, select=c(Latitude, Longitude, Date))
+	latlondate <- subset(data, select=c(Latitude, Longitude, Date))
 	colnames(latlondate) <- c("lat", "lon", "date")
 	sun.df <- suncalc::getSunlightTimes(data = latlondate, keep = c("sunrise", "sunset"))
 	
 	# Merge with the data:
-	sandeel.dt <- cbind(sandeel.dt, sun.df[, c("sunrise", "sunset")])
+	data <- cbind(data, sun.df[, c("sunrise", "sunset")])
 	
 	
-	sandeel.dt[, hour_from_sunrise := as.numeric(difftime(DateTime, sunrise), units="hours")]
-	sandeel.dt[, sunset_sunrise := as.numeric(difftime(sunset, sunrise), units="hours")]
-	sandeel.dt[, relative_time := hour_from_sunrise / sunset_sunrise]
+	data[, hour_from_sunrise := as.numeric(difftime(DateTime, sunrise), units="hours")]
+	data[, sunset_sunrise := as.numeric(difftime(sunset, sunrise), units="hours")]
+	data[, relative_time := hour_from_sunrise / sunset_sunrise]
 	
 	
-	return(sandeel.dt)
+	return(data)
 }
 
 ##################################################

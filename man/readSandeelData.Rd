@@ -4,7 +4,7 @@
 \alias{readSandeelData}
 \title{Read sandeel school depth data}
 \usage{
-readSandeelData(filePath)
+readSandeelData(filePath, data = NULL)
 }
 \arguments{
 \item{filePath}{The path to the sandeel school depth data file.}

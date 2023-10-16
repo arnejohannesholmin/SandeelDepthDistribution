@@ -23,6 +23,7 @@ plotModelFit(
   transpose = FALSE,
   size = list(main = 3, info = 3, line = 1, axis.text = 10, axis.title = 14),
   axis.text.angle = list(x = 0, y = 0),
+  binwidth = NULL,
   ...
 )
 }
